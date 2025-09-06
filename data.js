@@ -14,7 +14,7 @@ const AssignmentGroup = {
   assignments: [
     {
       id: 1,
-      name: "Write an If-Else If Else Statement",
+      name: "Write an If Else-If Else Statement",
       due_at: "2023-01-25",
       points_possible: 50
     },
@@ -32,11 +32,11 @@ const AssignmentGroup = {
     }
   ]
 };
-const assignments=AssignmentGroup["assignments"]
-function FindAssignment(learner){
+
+function FindAssignment(assignments, learner){
   for(let assignment of assignments){
-    if(learner["learner_id"]==assignment["id"])
-      return assignment["id"]
+    if(learner["assignment_id"]==assignment["id"])
+      return assignment
   }
 
 }
@@ -83,7 +83,7 @@ const LearnerSubmissions = [
     }
   }
 ];
-function AddGrade(info, learner){
+function AddGrade(info, learner, submissions, assignments){
   let position=0
   while(position<info.length){
     if(info[position]["id"]===learner["learner_id"])
@@ -92,33 +92,35 @@ function AddGrade(info, learner){
       position++
   }
   if(position<info.length){
-    const assignment=FindAssignment(LearnerSubmissions[position]["assignment_id"])
-    info[position][assignment]=GetLearnerPercent(info[position], assignment)
+    const assignment=FindAssignment(assignments, learner)
+    info[position][assignment]=GetLearnerPercent(info[position], assignment, submissions, assignments) 
+     
   }
   else{
     const assignmentId=learner["assignment_id"]
+     
    const added=
       {
         "id":learner["learner_id"]
       };
-        added[assignmentId]=GetLearnerPercent(learner["learner_id"], learner["assignment_id"]);
+        added[assignmentId]=GetLearnerPercent(learner["learner_id"], learner["assignment_id"], submissions, assignments);
       
       info.push(added);
   }
 }
 function getLearnerData(course, ag, submissions) {
-  let info=[]
-  
-  for(let learner of LearnerSubmissions){
-   
-    AddGrade(info, learner)
+  let info=[];
+  const assignments=ag["assignments"];
+  if(ag["course_id"]==course["id"]){
+     for(let learner of submissions){
+        AddGrade(info, learner, submissions, ag["assignments"]);
+     }
+     for(let position=0; position<info.length; position++){
+         info[position]["avg"]=CalculateLearnerAverage(info[position]["id"], submissions, assignments)
+     }
   }
-function FindAssignment(id){
-    for(let assignment of assignments){
-        if(assignment["id"]==id)
-            return assignment
-    }
-}
+  else 
+     throw "Assignments are not for this course.";
   // here, we would process this data to achieve the desired result.
   /*const result = [
     {
