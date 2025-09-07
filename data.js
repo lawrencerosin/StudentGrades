@@ -32,13 +32,29 @@ const AssignmentGroup = {
     }
   ]
 };
-
+function FindLearner(learners, learner){
+  for(let current of learners){
+    if(current["learner_id"]==learner["id"])
+      return current;
+  }
+}
 function FindAssignment(assignments, learner){
   for(let assignment of assignments){
     if(learner["assignment_id"]==assignment["id"])
       return assignment
   }
 
+}
+function WasSubmittedOnTime(learner, assignment){
+  const submittedDate=learner["submitted_at"].split("-");
+  const dueDate=assignment["due_at"].split("-");
+  for(let position=0; position<submittedDate.length; position++){
+    if(ParseNumber(submittedDate[position])<ParseNumber(dueDate[position]))
+      return true;
+    else if(ParseNumber(submittedDate[position])>ParseNumber(dueDate[position]))
+      return false;
+  }//If it was submitted exactly on the due date, it was submitted right on time
+  return true;
 }
 // The provided learner submission data.
 const LearnerSubmissions = [
@@ -83,41 +99,35 @@ const LearnerSubmissions = [
     }
   }
 ];
-function AddGrade(info, learner, submissions, assignments){
-  let position=0
-  while(position<info.length){
-    if(info[position]["id"]===learner["learner_id"])
-      break
-    else 
-      position++
+function GetLearners(groups){
+  const learners=[];
+  for(let group of groups){
+    let exists=false;
+    for(let learner of learners){
+      if(learner["id"]==group["learner_id"]){
+        exists=true;
+        break;
+      }
+    }
+    if(!exists)
+       learners.push({"id":group["learner_id"]});
   }
-  if(position<info.length){
-    const assignment=FindAssignment(assignments, learner)
-    info[position][assignment]=GetLearnerPercent(info[position], assignment, submissions, assignments) 
-     
-  }
-  else{
-    const assignmentId=learner["assignment_id"]
-     
-   const added=
-      {
-        "id":learner["learner_id"]
-      };
-        added[assignmentId]=GetLearnerPercent(learner["learner_id"], learner["assignment_id"], submissions, assignments);
-      
-      info.push(added);
-  }
+  return learners;
 }
 function getLearnerData(course, ag, submissions) {
   let info=[];
+  
   const assignments=ag["assignments"];
   if(ag["course_id"]==course["id"]){
-     for(let learner of submissions){
-        AddGrade(info, learner, submissions, ag["assignments"]);
-     }
-     for(let position=0; position<info.length; position++){
-         info[position]["avg"]=CalculateLearnerAverage(info[position]["id"], submissions, assignments)
-     }
+      const learners=GetLearners(submissions);
+      for(let position=0; position<learners.length; position++){
+        
+        AddLearnerPercents(learners[position],  submissions, assignments)
+          learners[position]["avg"]=CalculateLearnerAverage(learners[position]["id"], submissions, assignments);
+        
+      }
+      return learners;
+    
   }
   else 
      throw "Assignments are not for this course.";
@@ -137,7 +147,7 @@ function getLearnerData(course, ag, submissions) {
     }
   ];
  */
-  return info;
+ 
 }
 
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);

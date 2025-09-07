@@ -1,21 +1,24 @@
-function GetLearnerPercent(learner, assignment, submissions, assignments){
+function AddLearnerPercents(learner, submissions, assignments){
     for(let submission of submissions){
-        if(submission["learner_id"]==learner["id"]&&submission["assignment_id"]==assignment["id"]){
-            let perfectScore
-            for(let position=0; position<assignments.length; position++){
-                if(assignments[position]["id"]==assignment["id"]){
-                    perfectScore=assignments[position]["points_possible"]
-                    //No need to be in the loop anymore
-                    break
+        const assignmentId=submission["assignment_id"];
+        console.log(assignmentId+" id")
+        if(submission["learner_id"]==learner["id"]) {
+            let score=submission["submission"]["score"];
+           
+            for(let assignment of assignments){
+                if(assignment["id"]==assignmentId){
+                    const learnerData=FindLearner(submissions, learner)["submission"];
+                    const onTime=WasSubmittedOnTime(learnerData, assignment);
+                    console.log(assignment);
+                    if(!onTime)
+                        score=score-assignment["points_possible"]/10;
+                   learner[assignmentId]=score/assignment["points_possible"];
+                   break;
                 }
             }
-            console.log("submission score "+submission["submission"]["score"])
-            return submission["submission"]["score"]/perfectScore
         }
-           
     }
-    //If the student didn't submit the assignment, he/she got a 0
-    return 0
+   
 }
 function CalculateLearnerAverage(id, submissions, assignments){
     let totalScore=0
